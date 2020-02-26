@@ -1,0 +1,54 @@
+- name: Install yum-utils
+  yum:
+    name: yum-utils
+    state: installed
+  tags:
+    - docker
+
+- name: Adding a repository
+  template:
+    src: "docker-ce.repo.j2"
+    dest: /etc/yum.repos.d/docker-ce.repo
+    owner: root
+    mode: 0644
+  tags:
+    - docker
+
+- name: Install docker
+  yum:
+    name: docker-ce
+    state: installed
+  tags:
+    - docker
+
+- name: Confirm Docker group
+  shell: "cat /etc/group | grep docker:"
+  register: docker_res
+  changed_when: false
+  tags:
+    - docker
+
+- name: Register work user to docker group
+  user:
+    name: gsec
+    groups: docker
+    append: yes
+  when: "'gsec' not in '{{ docker_res.stdout }}'"
+  tags:
+    - docker
+
+- name: docker start
+  service:
+    name: docker
+    state: started
+    enabled: yes
+  tags:
+    - docker
+
+- name: docker-compose download
+  get_url:
+    url: "https://github.com/docker/compose/releases/download/{{docker_compose_version}}/docker-compose-{{ansible_system}}-{{ansible_machine}}"
+    dest: "/usr/local/bin/docker-compose"
+    mode: 755
+  tags:
+    - docker

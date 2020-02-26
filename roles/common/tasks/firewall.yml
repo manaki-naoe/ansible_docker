@@ -1,0 +1,20 @@
+- name: Install packages required for SELinux operation
+  yum:
+    name: libselinux-python
+    state: present
+  tags:
+    - firewall
+
+- name: Disable SELinux
+  selinux:
+    state: disabled
+  tags:
+    - firewall
+
+- name: Disable firewall
+  service:
+    name: firewalld
+    state: stopped
+    enabled: no
+  tags:
+    - firewall

@@ -1,0 +1,29 @@
+# locale setting
+- name: Check if the locale is set to Japan
+  shell: localectl status | grep "ja_JP.utf8"
+  register: result
+  failed_when: False
+  changed_when: False
+  tags:
+    - locale
+
+- name: Set locale to Japan
+  command: localectl set-locale LANG=ja_JP.utf8
+  when: result.rc == 1
+  tags:
+    - locale
+
+# timezone setting
+- name: Check if timezone is Tokyo
+  shell: timedatectl status | grep "Asia/Tokyo"
+  register: result
+  failed_when: False
+  changed_when: False
+  tags:
+    - locale
+
+- name: Set timezone to Tokyo
+  command: timedatectl set-timezone Asia/Tokyo
+  when: result.rc == 1
+  tags:
+    - locale

@@ -1,0 +1,5 @@
+- include: chrony.yml
+- include: yum.yml
+- include: firewall.yml
+- include: locale.yml
+- include: volume.yml

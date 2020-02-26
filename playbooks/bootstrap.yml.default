@@ -1,0 +1,50 @@
+- hosts: localhost
+  become: yes
+  user: opc
+  vars_prompt:
+    - name: "public_key_path"
+      prompt: "public key path?"
+      private: no
+  vars:
+    ansible_ssh_user: opc
+    work_user: < work_user_name here >
+    work_user_password: < work_user_password here >
+  tasks:
+    - name: Set locale to Japan
+      command: localectl set-locale LANG=ja_JP.utf8
+    - name: Setting of hostname
+      lineinfile:
+        dest: /etc/hostname
+        state: present
+        backrefs: yes
+        regexp: '^localhost.localdomain'
+        line: '{{ inventory_hostname }}'
+    - name: Work user creation
+      user:
+        name: "{{ work_user }}"
+        password: "{{ work_user_password }}"
+    - name: Grant sudo authority to working user
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: '^{{ work_user }}'
+        line: '{{ work_user }} ALL=(ALL) NOPASSWD:ALL'
+        insertafter: '^root'
+        validate: 'visudo -cf %s'
+    - name: Add ssh public key to authorized_key of target server
+      authorized_key:
+        user: "{{ work_user }}"
+        key: "{{ lookup('file', public_key_path) }}"
+    - name: Prohibit SSH root login and password login
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+      with_items:
+        - { regexp: "^PermitRootLogin", line: "PermitRootLogin no" }
+        - { regexp: "^PasswordAuthentication", line: "PasswordAuthentication no" }
+      notify: Restart sshd
+  handlers:
+    - name: Restart sshd
+      action: service name=sshd state=restarted

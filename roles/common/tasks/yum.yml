@@ -1,0 +1,41 @@
+- name: Check existence /var/tmp/epel-release-7-12.noarch.rpm
+  stat:
+    path: /var/tmp/epel-release-7-12.noarch.rpm
+  register: epel_rpm
+  tags:
+    - yum
+
+- name: epel rpm download
+  get_url:
+    url: https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-7-12.noarch.rpm
+    dest: "/var/tmp/epel-release-7-12.noarch.rpm"
+  when: not epel_rpm.stat.exists
+  tags:
+    - yum
+
+- name: epel rpm
+  command: rpm -ivh /var/tmp/epel-release-7-12.noarch.rpm
+  when: not epel_rpm.stat.exists
+  tags:
+    - yum
+
+- name: epel repository
+  yum:
+    name: epel-release
+    state: present
+  tags:
+    - yum
+
+- name: yum package installation
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - yum-axelget
+    - bind-utils
+    - net-tools
+    - wget
+    - unzip
+    - git
+  tags:
+    - yum
